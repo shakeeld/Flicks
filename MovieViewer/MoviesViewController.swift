@@ -14,16 +14,30 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var TableView: UITableView!
     var movies: [NSDictionary]?
-   // let data = []
-   // var filteredData: [String]!
+    var filteredData: [NSDictionary]?
+    var endpoint: String!
     
-
+    @IBOutlet weak var collectionView: UICollectionView!
+    let totalColors: Int = 100
+    func colorForIndexPath(indexPath: NSIndexPath) -> UIColor {
+        if indexPath.row >= totalColors {
+            return UIColor.blackColor()	// return black if we get an unexpected row index
+        }
+        
+        var hueValue: CGFloat = CGFloat(indexPath.row) / CGFloat(totalColors)
+        return UIColor(hue: hueValue, saturation: 1.0, brightness: 1.0, alpha: 1.0)
+    }
+    
+    
+    
+    
     
     func refreshControlAction(refreshControl: UIRefreshControl) {
         
+        self.TableView.reloadData()
         
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = NSURL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")
+        let url = NSURL(string: "https://api.themoviedb.org/3/movie/\(endpoint)?api_key=\(apiKey)")
         let request = NSURLRequest(
             URL: url!,
             cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalCacheData,
@@ -60,15 +74,39 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        //  collectionView.dataSource = self as! UICollectionViewDataSource
+        
+        
+        
+        
+        
+        self.navigationItem.title = "Movies"
+        if let navigationBar = navigationController?.navigationBar {
+            //navigationBar.setBackgroundImage(UIImage(named: "filmstrip"), forBarMetrics: .Default)
+            navigationBar.tintColor = UIColor.blackColor()
+            
+            let shadow = NSShadow()
+           // shadow.shadowColor = UIColor.whiteColor().colorWithAlphaComponent(0.8)
+            shadow.shadowOffset = CGSizeMake(2, 2);
+            shadow.shadowBlurRadius = 2;
+            navigationBar.titleTextAttributes = [
+               // NSFontAttributeName : UIFont.fontNamesForFamilyName("Copperplate"),
+                NSFontAttributeName : UIFont.boldSystemFontOfSize(22),
+                NSForegroundColorAttributeName : UIColor.blackColor(),
+                NSShadowAttributeName : shadow
+            ]
+        }
+        
+        self.TableView.reloadData()
+        
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: "refreshControlAction:", forControlEvents: UIControlEvents.ValueChanged)
         TableView.insertSubview(refreshControl, atIndex: 0)
         
         TableView.dataSource = self
         TableView.delegate = self
-        //searchBar.delegate = self
-        //filteredData = data as! [String]
-        
+    //    searchBar.delegate = self
+        filteredData = movies
         
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
         let url = NSURL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")
@@ -112,6 +150,8 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         // Do any additional setup after loading the view.
     }
+    
+    
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -126,11 +166,6 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         else {
          return 0
             }
-/*
-
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return filteredData.count
-    }  */
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -140,9 +175,16 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         let movie = movies![indexPath.row]
         let title = movie["title"] as! String
         let overview = movie["overview"] as! String
-        //cell.textLabel?.text = filteredData[indexPath.row]
+        
+        let backgroundView = UIView()
+        backgroundView.backgroundColor = UIColor.redColor()
+        cell.selectedBackgroundView = backgroundView
+      
+       // cell.textLabel?.text = title[indexPath.row]
         cell.titleLabel.text = title
         cell.overviewLabel.text = overview
+        
+        cell.overviewLabel.sizeToFit()
        
         
         let baseUrl = "http://image.tmdb.org/t/p/w500"
@@ -159,14 +201,13 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         return cell
         
     }
-    
-   /* func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
-        filteredData = searchText.isEmpty ? data : data.filter({(dataString: String) -> Bool in
+  /*
+   func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
+        movies = searchText.isEmpty ? movies : movies!.filter({(dataString: String) -> Bool in
             return dataString.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
         })
         
     }
-
 */
     
         
